@@ -34,7 +34,7 @@ while page < 2:
     page = page + 1
 
 
-for link in links[:5]:
+for link in links[:30]:
 
     auction_html = requests.get(link, headers=headers).text
     bsobj = soup(auction_html, features="html.parser")
@@ -94,7 +94,14 @@ for link in links[:5]:
             #skrzynie_biegow
             start_index = info.find("Skrzynia biegów")
             finish_index = info.find("Napęd")
-            skrzynie_biegow.append(info[start_index:finish_index].replace("Skrzynia biegów", ""))
+            skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
+            if "Spalanie" in skrzynia:
+                finish_index = info.find("Spalanie")
+                skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
+            elif "Typ" in skrzynia:
+                finish_index = info.find("Typ")
+                skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
+            skrzynie_biegow.append(skrzynia)
 
             #liczby_drzwi
             start_index = info.find("Liczba drzwi")
@@ -104,8 +111,11 @@ for link in links[:5]:
             #kolory
             start_index = info.find("Kolor")
             finish_index = info.find("Rodzaj koloru")
-            kolory.append(info[start_index:finish_index].replace("Kolor", ""))
-
+            kolor = info[start_index:finish_index].replace("Kolor", "")
+            if "Kraj" in kolor:
+                finish_index = info.find("Kraj")
+                kolor = info[start_index:finish_index].replace("Kolor", "")
+            kolory.append(kolor)
 
 
 
