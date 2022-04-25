@@ -1,0 +1,123 @@
+#imports
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup as soup
+
+#lists
+headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0' }
+links = []
+
+#car
+info = []
+
+ceny = []
+marki = []
+modele = []
+roczniki = []
+przebiegi = []
+pojemnosci = []
+rodzaje_paliwa = []
+moce = []
+skrzynie_biegow = []
+liczby_drzwi = []
+kolory = []
+
+
+#getting links from the website
+page = 1
+while page < 2:
+    html = requests.get(f"https://www.otomoto.pl/osobowe/od-2000?search%5Bfilter_float_year%3Ato%5D=2015&page={page}", headers = headers)
+    bsobj = soup(html.content, features="html.parser")
+    for data in bsobj.find_all('div', class_='ooa-1nvnpye e1b25f6f5'):
+            for a in data.find_all('a'):
+                        links.append(a.get('href'))
+    page = page + 1
+
+
+for link in links[:5]:
+
+    auction_html = requests.get(link, headers=headers).text
+    bsobj = soup(auction_html, features="html.parser")
+
+
+    #ceny
+
+    for span in bsobj.find_all('span', class_='offer-price__number'):
+            cena = span.get_text(strip=True)
+            cena = cena.replace("PLN", "").replace(" ", "")
+            if cena not in ceny:
+                ceny.append(cena)
+
+
+    for div in bsobj.find_all('div', class_='offer-params with-vin'):
+            info = div.get_text(strip=True)
+
+            #marki
+            start_index = info.find("Marka pojazdu")
+            finish_index = info.find("Model pojazdu")
+            marki.append(info[start_index:finish_index].replace("Marka pojazdu", ""))
+
+            #modele
+            start_index = info.find("Model pojazdu")
+            finish_index = info.find("Wersja")
+            if len(info[start_index:finish_index].replace("Model pojazdu", "")) < 10:
+                modele.append(info[start_index:finish_index].replace("Model pojazdu", ""))
+            else:
+                finish_index = info.find("Rok produkcji")
+                modele.append(info[start_index:finish_index].replace("Model pojazdu", ""))
+
+            #roczniki
+            start_index = info.find("Rok produkcji")
+            finish_index = info.find("Przebieg")
+            roczniki.append(info[start_index:finish_index].replace("Rok produkcji", ""))
+
+            #przebiegi
+            start_index = info.find("Przebieg")
+            finish_index = info.find("Pojemność skokowa")
+            przebiegi.append(info[start_index:finish_index].replace("Przebieg", "").replace("km", "").replace(" ", ""))
+
+            #pojemnosci
+            start_index = info.find("Pojemność skokowa")
+            finish_index = info.find("Rodzaj paliwa")
+            pojemnosci.append(info[start_index:finish_index].replace("Pojemność skokowa", "").replace("cm3", "").replace(" ", ""))
+
+            #rodzaje_paliwa
+            start_index = info.find("Rodzaj paliwa")
+            finish_index = info.find("Moc")
+            rodzaje_paliwa.append(info[start_index:finish_index].replace("Rodzaj paliwa", ""))
+
+            #moce
+            start_index = info.find("Moc")
+            finish_index = info.find("Skrzynia biegów")
+            moce.append(info[start_index:finish_index].replace("Moc", "").replace("KM", "").replace(" ", ""))
+
+            #skrzynie_biegow
+            start_index = info.find("Skrzynia biegów")
+            finish_index = info.find("Napęd")
+            skrzynie_biegow.append(info[start_index:finish_index].replace("Skrzynia biegów", ""))
+
+            #liczby_drzwi
+            start_index = info.find("Liczba drzwi")
+            finish_index = info.find("Liczba miejsc")
+            liczby_drzwi.append(info[start_index:finish_index].replace("Liczba drzwi", ""))
+
+            #kolory
+            start_index = info.find("Kolor")
+            finish_index = info.find("Rodzaj koloru")
+            kolory.append(info[start_index:finish_index].replace("Kolor", ""))
+
+
+
+
+print(info)
+print(ceny)
+print(marki)
+print(modele)
+print(roczniki)
+print(przebiegi)
+print(pojemnosci)
+print(rodzaje_paliwa)
+print(moce)
+print(skrzynie_biegow)
+print(liczby_drzwi)
+print(kolory)
