@@ -25,7 +25,7 @@ kolory = []
 
 #getting links from the website
 page = 1
-while page < 2:
+while page < 100:
     html = requests.get(f"https://www.otomoto.pl/osobowe/od-2000?search%5Bfilter_float_year%3Ato%5D=2015&page={page}", headers = headers)
     bsobj = soup(html.content, features="html.parser")
     for data in bsobj.find_all('div', class_='ooa-1nvnpye e1b25f6f5'):
@@ -34,7 +34,7 @@ while page < 2:
     page = page + 1
 
 
-for link in links[:30]:
+for link in links:
 
     auction_html = requests.get(link, headers=headers).text
     bsobj = soup(auction_html, features="html.parser")
@@ -42,12 +42,11 @@ for link in links[:30]:
 
     #ceny
 
-    for span in bsobj.find_all('span', class_='offer-price__number'):
-            cena = span.get_text(strip=True)
-            cena = cena.replace("PLN", "").replace(" ", "")
-            if cena not in ceny:
-                ceny.append(cena)
-
+    span = bsobj.find('span', class_='offer-price__number')
+    cena = str(span)
+    cena = cena.replace("PLN", "").replace(" ", "").replace('<spanclass="offer-price__number">', "").replace('<spanclass="offer-price__currency"></span>\n</span>', "")
+    if cena != "None":
+        ceny.append(cena)
 
     for div in bsobj.find_all('div', class_='offer-params with-vin'):
             info = div.get_text(strip=True)
@@ -98,15 +97,23 @@ for link in links[:30]:
             if "Spalanie" in skrzynia:
                 finish_index = info.find("Spalanie")
                 skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
-            elif "Typ" in skrzynia:
+            if "Typ" in skrzynia:
                 finish_index = info.find("Typ")
+                skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
+            if "Filtr cząstek" in skrzynia:
+                finish_index = info.find("Filtr cząstek")
                 skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
             skrzynie_biegow.append(skrzynia)
 
             #liczby_drzwi
             start_index = info.find("Liczba drzwi")
             finish_index = info.find("Liczba miejsc")
-            liczby_drzwi.append(info[start_index:finish_index].replace("Liczba drzwi", ""))
+            liczba_drzwi = info[start_index:finish_index].replace("Liczba drzwi", "")
+            if "Kolor" in liczba_drzwi:
+                finish_index = info.find("Kolor")
+                liczba_drzwi = info[start_index:finish_index]
+            liczba_drzwi = liczba_drzwi.replace("Liczba drzwi", "")
+            liczby_drzwi.append(liczba_drzwi)
 
             #kolory
             start_index = info.find("Kolor")
@@ -115,19 +122,42 @@ for link in links[:30]:
             if "Kraj" in kolor:
                 finish_index = info.find("Kraj")
                 kolor = info[start_index:finish_index].replace("Kolor", "")
+            if "Pierwsza" in kolor:
+                finish_index = info.find("Pierwsza")
+                kolor = info[start_index:finish_index]
+            if "Zarejestrowany" in kolor:
+                finish_index = info.find("Zarejestrowany")
+                kolor = info[start_index:finish_index]
+            if "VAT" in kolor:
+                finish_index = info.find("VAT")
+                kolor = info[start_index:finish_index]
+            if "VAT marża" in kolor:
+                finish_index = info.find("VAT marża")
+                kolor = info[start_index:finish_index]
+            if "Stan" in kolor:
+                finish_index = info.find("Stan")
+                kolor = info[start_index:finish_index]
+            if "Faktura VAT" in kolor:
+                finish_index = info.find("Faktura VAT")
+                kolor = info[start_index:finish_index]
+            kolor = kolor.replace("Kolor", "").replace("VAT marżaTak", "").replace("VAT marżaNie", "")
             kolory.append(kolor)
 
 
 
-print(info)
-print(ceny)
-print(marki)
-print(modele)
-print(roczniki)
-print(przebiegi)
-print(pojemnosci)
-print(rodzaje_paliwa)
-print(moce)
-print(skrzynie_biegow)
-print(liczby_drzwi)
-print(kolory)
+#saving to csv
+samochody = {"cena": ceny,
+             "marka": marki,
+             "model": modele,
+             "rocznik": roczniki,
+             "przebieg": przebiegi,
+             "pojemnosc": pojemnosci,
+             "rodzaj paliwa": rodzaje_paliwa,
+             "moc": moce,
+             "skrzynia biegow": skrzynie_biegow,
+             "liczba drzwi": liczby_drzwi,
+             "kolor": kolory}
+
+
+df = pd.DataFrame.from_dict(samochody)
+df.to_csv("Samochody Otomoto", index=False)
