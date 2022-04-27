@@ -5,159 +5,175 @@ from bs4 import BeautifulSoup as soup
 
 #lists
 headers = { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0' }
-links = []
 
-#car
-info = []
+page = 260
+max_page = 280
+attempts = 80
 
-ceny = []
-marki = []
-modele = []
-roczniki = []
-przebiegi = []
-pojemnosci = []
-rodzaje_paliwa = []
-moce = []
-skrzynie_biegow = []
-liczby_drzwi = []
-kolory = []
+for x in range(attempts):
+    links = []
 
+    #car
+    info = []
 
-#getting links from the website
-page = 1
-while page < 100:
-    html = requests.get(f"https://www.otomoto.pl/osobowe/od-2000?search%5Bfilter_float_year%3Ato%5D=2015&page={page}", headers = headers)
-    bsobj = soup(html.content, features="html.parser")
-    for data in bsobj.find_all('div', class_='ooa-1nvnpye e1b25f6f5'):
-            for a in data.find_all('a'):
-                        links.append(a.get('href'))
-    page = page + 1
+    ceny = []
+    marki = []
+    modele = []
+    roczniki = []
+    przebiegi = []
+    pojemnosci = []
+    rodzaje_paliwa = []
+    moce = []
+    skrzynie_biegow = []
+    liczby_drzwi = []
+    kolory = []
 
 
-for link in links:
-
-    auction_html = requests.get(link, headers=headers).text
-    bsobj = soup(auction_html, features="html.parser")
+    done = 0
 
 
-    #ceny
+    #getting links from the website
+    while page < max_page:
+        html = requests.get(f"https://www.otomoto.pl/osobowe/od-1995?search%5Bfilter_float_year%3Ato%5D=2015&page={page}", headers = headers)
+        bsobj = soup(html.content, features="html.parser")
+        for data in bsobj.find_all('div', class_='ooa-1nvnpye e1b25f6f5'):
+                for a in data.find_all('a'):
+                            links.append(a.get('href'))
+        page = page + 1
+        print(f"Page number: {page}")
 
-    span = bsobj.find('span', class_='offer-price__number')
-    cena = str(span)
-    cena = cena.replace("PLN", "").replace(" ", "").replace('<spanclass="offer-price__number">', "").replace('<spanclass="offer-price__currency"></span>\n</span>', "")
-    if cena != "None":
-        ceny.append(cena)
+    done = 0
+    print(f"Number of auctions: {len(links)}")
+    for link in links:
 
-    for div in bsobj.find_all('div', class_='offer-params with-vin'):
-            info = div.get_text(strip=True)
+        auction_html = requests.get(link, headers=headers).text
+        bsobj = soup(auction_html, features="html.parser")
 
-            #marki
-            start_index = info.find("Marka pojazdu")
-            finish_index = info.find("Model pojazdu")
-            marki.append(info[start_index:finish_index].replace("Marka pojazdu", ""))
 
-            #modele
-            start_index = info.find("Model pojazdu")
-            finish_index = info.find("Wersja")
-            if len(info[start_index:finish_index].replace("Model pojazdu", "")) < 10:
-                modele.append(info[start_index:finish_index].replace("Model pojazdu", ""))
-            else:
-                finish_index = info.find("Rok produkcji")
-                modele.append(info[start_index:finish_index].replace("Model pojazdu", ""))
+        #ceny
 
-            #roczniki
-            start_index = info.find("Rok produkcji")
-            finish_index = info.find("Przebieg")
-            roczniki.append(info[start_index:finish_index].replace("Rok produkcji", ""))
+        span = bsobj.find('span', class_='offer-price__number')
+        cena = str(span)
+        cena = cena.replace("PLN", "").replace(" ", "").replace('<spanclass="offer-price__number">', "").replace('<spanclass="offer-price__currency"></span>\n</span>', "")
+        if cena != "None":
+            ceny.append(cena)
 
-            #przebiegi
-            start_index = info.find("Przebieg")
-            finish_index = info.find("Pojemność skokowa")
-            przebiegi.append(info[start_index:finish_index].replace("Przebieg", "").replace("km", "").replace(" ", ""))
+        for div in bsobj.find_all('div', class_='offer-params with-vin'):
+                info = div.get_text(strip=True)
 
-            #pojemnosci
-            start_index = info.find("Pojemność skokowa")
-            finish_index = info.find("Rodzaj paliwa")
-            pojemnosci.append(info[start_index:finish_index].replace("Pojemność skokowa", "").replace("cm3", "").replace(" ", ""))
+                #marki
+                start_index = info.find("Marka pojazdu")
+                finish_index = info.find("Model pojazdu")
+                marki.append(info[start_index:finish_index].replace("Marka pojazdu", ""))
 
-            #rodzaje_paliwa
-            start_index = info.find("Rodzaj paliwa")
-            finish_index = info.find("Moc")
-            rodzaje_paliwa.append(info[start_index:finish_index].replace("Rodzaj paliwa", ""))
+                #modele
+                start_index = info.find("Model pojazdu")
+                finish_index = info.find("Wersja")
+                if len(info[start_index:finish_index].replace("Model pojazdu", "")) < 10:
+                    modele.append(info[start_index:finish_index].replace("Model pojazdu", ""))
+                else:
+                    finish_index = info.find("Rok produkcji")
+                    modele.append(info[start_index:finish_index].replace("Model pojazdu", ""))
 
-            #moce
-            start_index = info.find("Moc")
-            finish_index = info.find("Skrzynia biegów")
-            moce.append(info[start_index:finish_index].replace("Moc", "").replace("KM", "").replace(" ", ""))
+                #roczniki
+                start_index = info.find("Rok produkcji")
+                finish_index = info.find("Przebieg")
+                roczniki.append(info[start_index:finish_index].replace("Rok produkcji", ""))
 
-            #skrzynie_biegow
-            start_index = info.find("Skrzynia biegów")
-            finish_index = info.find("Napęd")
-            skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
-            if "Spalanie" in skrzynia:
-                finish_index = info.find("Spalanie")
+                #przebiegi
+                start_index = info.find("Przebieg")
+                finish_index = info.find("Pojemność skokowa")
+                przebiegi.append(info[start_index:finish_index].replace("Przebieg", "").replace("km", "").replace(" ", ""))
+
+                #pojemnosci
+                start_index = info.find("Pojemność skokowa")
+                finish_index = info.find("Rodzaj paliwa")
+                pojemnosci.append(info[start_index:finish_index].replace("Pojemność skokowa", "").replace("cm3", "").replace(" ", ""))
+
+                #rodzaje_paliwa
+                start_index = info.find("Rodzaj paliwa")
+                finish_index = info.find("Moc")
+                rodzaje_paliwa.append(info[start_index:finish_index].replace("Rodzaj paliwa", ""))
+
+                #moce
+                start_index = info.find("Moc")
+                finish_index = info.find("Skrzynia biegów")
+                moce.append(info[start_index:finish_index].replace("Moc", "").replace("KM", "").replace(" ", ""))
+
+                #skrzynie_biegow
+                start_index = info.find("Skrzynia biegów")
+                finish_index = info.find("Napęd")
                 skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
-            if "Typ" in skrzynia:
-                finish_index = info.find("Typ")
-                skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
-            if "Filtr cząstek" in skrzynia:
-                finish_index = info.find("Filtr cząstek")
-                skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
-            skrzynie_biegow.append(skrzynia)
+                if "Spalanie" in skrzynia:
+                    finish_index = info.find("Spalanie")
+                    skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
+                if "Typ" in skrzynia:
+                    finish_index = info.find("Typ")
+                    skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
+                if "Filtr cząstek" in skrzynia:
+                    finish_index = info.find("Filtr cząstek")
+                    skrzynia = info[start_index:finish_index].replace("Skrzynia biegów", "")
+                skrzynie_biegow.append(skrzynia)
 
-            #liczby_drzwi
-            start_index = info.find("Liczba drzwi")
-            finish_index = info.find("Liczba miejsc")
-            liczba_drzwi = info[start_index:finish_index].replace("Liczba drzwi", "")
-            if "Kolor" in liczba_drzwi:
-                finish_index = info.find("Kolor")
-                liczba_drzwi = info[start_index:finish_index]
-            liczba_drzwi = liczba_drzwi.replace("Liczba drzwi", "")
-            liczby_drzwi.append(liczba_drzwi)
+                #liczby_drzwi
+                start_index = info.find("Liczba drzwi")
+                finish_index = info.find("Liczba miejsc")
+                liczba_drzwi = info[start_index:finish_index].replace("Liczba drzwi", "")
+                if "Kolor" in liczba_drzwi:
+                    finish_index = info.find("Kolor")
+                    liczba_drzwi = info[start_index:finish_index]
+                liczba_drzwi = liczba_drzwi.replace("Liczba drzwi", "")
+                liczby_drzwi.append(liczba_drzwi)
 
-            #kolory
-            start_index = info.find("Kolor")
-            finish_index = info.find("Rodzaj koloru")
-            kolor = info[start_index:finish_index].replace("Kolor", "")
-            if "Kraj" in kolor:
-                finish_index = info.find("Kraj")
+                #kolory
+                start_index = info.find("Kolor")
+                finish_index = info.find("Rodzaj koloru")
                 kolor = info[start_index:finish_index].replace("Kolor", "")
-            if "Pierwsza" in kolor:
-                finish_index = info.find("Pierwsza")
-                kolor = info[start_index:finish_index]
-            if "Zarejestrowany" in kolor:
-                finish_index = info.find("Zarejestrowany")
-                kolor = info[start_index:finish_index]
-            if "VAT" in kolor:
-                finish_index = info.find("VAT")
-                kolor = info[start_index:finish_index]
-            if "VAT marża" in kolor:
-                finish_index = info.find("VAT marża")
-                kolor = info[start_index:finish_index]
-            if "Stan" in kolor:
-                finish_index = info.find("Stan")
-                kolor = info[start_index:finish_index]
-            if "Faktura VAT" in kolor:
-                finish_index = info.find("Faktura VAT")
-                kolor = info[start_index:finish_index]
-            kolor = kolor.replace("Kolor", "").replace("VAT marżaTak", "").replace("VAT marżaNie", "")
-            kolory.append(kolor)
+                if "Kraj" in kolor:
+                    finish_index = info.find("Kraj")
+                    kolor = info[start_index:finish_index].replace("Kolor", "")
+                if "Pierwsza" in kolor:
+                    finish_index = info.find("Pierwsza")
+                    kolor = info[start_index:finish_index]
+                if "Zarejestrowany" in kolor:
+                    finish_index = info.find("Zarejestrowany")
+                    kolor = info[start_index:finish_index]
+                if "VAT" in kolor:
+                    finish_index = info.find("VAT")
+                    kolor = info[start_index:finish_index]
+                if "VAT marża" in kolor:
+                    finish_index = info.find("VAT marża")
+                    kolor = info[start_index:finish_index]
+                if "Stan" in kolor:
+                    finish_index = info.find("Stan")
+                    kolor = info[start_index:finish_index]
+                if "Faktura VAT" in kolor:
+                    finish_index = info.find("Faktura VAT")
+                    kolor = info[start_index:finish_index]
+                kolor = kolor.replace("Kolor", "").replace("VAT marżaTak", "").replace("VAT marżaNie", "")
+                kolory.append(kolor)
+
+        print(f"Auctions number: {done} out of {len(links)}, attempt: {x} out of {attempts}")
+        done += 1
 
 
+    #saving to csv
+    samochody = {"cena": ceny,
+                 "marka": marki,
+                 "model": modele,
+                 "rocznik": roczniki,
+                 "przebieg": przebiegi,
+                 "pojemnosc": pojemnosci,
+                 "rodzaj paliwa": rodzaje_paliwa,
+                 "moc": moce,
+                 "skrzynia biegow": skrzynie_biegow,
+                 "liczba drzwi": liczby_drzwi,
+                 "kolor": kolory}
 
-#saving to csv
-samochody = {"cena": ceny,
-             "marka": marki,
-             "model": modele,
-             "rocznik": roczniki,
-             "przebieg": przebiegi,
-             "pojemnosc": pojemnosci,
-             "rodzaj paliwa": rodzaje_paliwa,
-             "moc": moce,
-             "skrzynia biegow": skrzynie_biegow,
-             "liczba drzwi": liczby_drzwi,
-             "kolor": kolory}
+    try:
+        df = pd.DataFrame.from_dict(samochody)
+        df.to_csv("Samochody Otomoto1", mode="a", index=False, header=False)
+    except:
+        print("The programme could not append data")
 
-
-df = pd.DataFrame.from_dict(samochody)
-df.to_csv("Samochody Otomoto", index=False)
+    max_page += 20
